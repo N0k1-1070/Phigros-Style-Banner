@@ -5,11 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>楽曲バナー画像ジェネレーター</title>
 
-  <link rel="preconnect" href="https://googleapis.com">
-  <link rel="preconnect" href="https://gstatic.com" crossorigin>
-  <link href="https://googleapis.com/css2?family=Noto+Sans+JP:wght@500;700&family=Saira:wght@500;700&display=swap" rel="stylesheet">
-
   <style>
+    /* Google FontsからSairaとNoto Sans JPを直接読み込み */
+    @import url('https://googleapis.com');
+
     body, input, select, button {
       font-family: 'Saira', 'Noto Sans JP', sans-serif;
     }
@@ -51,20 +50,9 @@
       background-size: 20px 20px;
       background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
     }
-    /* SafariにSairaフォントを強制ロードさせるための隠し要素 */
-    .font-preload {
-      font-family: 'Saira';
-      font-weight: 700;
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-    }
   </style>
 </head>
 <body>
-
-  <!-- フォント強制読み込み用 -->
-  <span class="font-preload">0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ</span>
 
   <h2>楽曲バナー画像ジェネレーター</h2>
 
@@ -139,11 +127,9 @@
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
 
-      // レベル数値（枠の真ん中 X=95 に配置）
       ctx.font = '700 68px "Saira", sans-serif';
       ctx.fillText(level, 95, 115);
 
-      // 難易度表記（枠の真ん中 X=95 に配置）
       ctx.font = '700 28px "Saira", sans-serif';
       ctx.fillText(diff, 95, 165);
       ctx.restore();
@@ -160,15 +146,14 @@
       ctx.fillText(composer, 198, 160, 660);
     }
 
-    // フォントの読み込みを明示的に待ってから描画
-    Promise.all([
-      document.fonts.load('700 68px "Saira"'),
-      document.fonts.load('500 28px "Saira"')
-    ]).then(() => {
-      draw();
+    // 読み込み完了時と少し遅らせたタイミングの両方で描画
+    window.addEventListener('load', () => {
+      document.fonts.ready.then(() => {
+        draw();
+      });
     });
-    // 念のため0.5秒後にも再描画
-    setTimeout(draw, 500);
+    draw();
+    setTimeout(draw, 1000);
 
     function downloadImage() {
       const link = document.createElement('a');
