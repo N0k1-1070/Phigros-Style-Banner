@@ -51,9 +51,20 @@
       background-size: 20px 20px;
       background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
     }
+    /* SafariにSairaフォントを強制ロードさせるための隠し要素 */
+    .font-preload {
+      font-family: 'Saira';
+      font-weight: 700;
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
+
+  <!-- フォント強制読み込み用 -->
+  <span class="font-preload">0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ</span>
 
   <h2>楽曲バナー画像ジェネレーター</h2>
 
@@ -123,17 +134,18 @@
       ctx.stroke();
       ctx.restore();
 
-      // 3. 数値と難易度のテキスト（Saira・イタリックなし・少し傾け）
+      // 3. 数値と難易度のテキスト（Saira・真っ直ぐ垂直）
       ctx.save();
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
-      ctx.transform(1, 0, -0.17, 1, 0, 0);
 
-      ctx.font = '700 66px "Saira", sans-serif';
-      ctx.fillText(level, 118, 115);
+      // レベル数値（枠の真ん中 X=95 に配置）
+      ctx.font = '700 68px "Saira", sans-serif';
+      ctx.fillText(level, 95, 115);
 
+      // 難易度表記（枠の真ん中 X=95 に配置）
       ctx.font = '700 28px "Saira", sans-serif';
-      ctx.fillText(diff, 115, 165);
+      ctx.fillText(diff, 95, 165);
       ctx.restore();
 
       // 4. 曲名と作曲者のテキスト
@@ -148,11 +160,15 @@
       ctx.fillText(composer, 198, 160, 660);
     }
 
-    // フォント読み込み前でも一度描画し、読み込み完了後にも再描画する
-    draw();
-    document.fonts.ready.then(() => {
+    // フォントの読み込みを明示的に待ってから描画
+    Promise.all([
+      document.fonts.load('700 68px "Saira"'),
+      document.fonts.load('500 28px "Saira"')
+    ]).then(() => {
       draw();
     });
+    // 念のため0.5秒後にも再描画
+    setTimeout(draw, 500);
 
     function downloadImage() {
       const link = document.createElement('a');
