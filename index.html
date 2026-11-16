@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>楽曲バナー画像ジェネレーター</title>
+  <link rel="preconnect" href="https://googleapis.com">
+  <link rel="preconnect" href="https://gstatic.com" crossorigin>
+  <link href="https://googleapis.com/css2?family=Noto+Sans+JP:wght@500;700&family=Saira:ital,wght@0,500;0,700;1,700&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: sans-serif;
+    body, input, select, button {
+      font-family: 'Saira', 'Noto Sans JP', sans-serif;
       background-color: #222;
       color: #fff;
       padding: 20px;
@@ -125,26 +128,20 @@
       ctx.transform(1, 0, -0.17, 1, 0, 0);
 
       // レベル数値
-      ctx.font = 'italic bold 64px sans-serif';
-      ctx.fillText(level, 118, 115);
+      ctx.font = '700 66px "Saira", sans-serif';
 
       // 難易度表記
-      ctx.font = 'italic bold 28px sans-serif';
-      ctx.fillText(diff, 115, 165);
-      ctx.restore();
+      ctx.font = '700 28px "Saira", sans-serif';
 
       // 4. 曲名と作曲者のテキスト
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'left';
 
       // 曲名（長い場合は自動で幅を縮小）
-      ctx.font = 'bold 48px sans-serif';
-      ctx.fillText(title, 195, 110, 660);
+      ctx.font = '700 48px "Saira", sans-serif';
 
       // 作曲者
-      ctx.font = '28px sans-serif';
-      ctx.fillStyle = '#dddddd';
-      ctx.fillText(composer, 198, 160, 660);
+      ctx.font = '500 28px "Saira", sans-serif';
     }
 
     // PNGとしてダウンロード
@@ -156,7 +153,7 @@
     }
 
     // 初回描画
-    draw();
+    document.fonts.ready.then(() => draw();)
   </script>
 </body>
 </html>
