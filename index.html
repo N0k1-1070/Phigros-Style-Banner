@@ -325,8 +325,10 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // 1. 黒帯（右端も平行四辺形と同じ角度で斜めカット）
       ctx.fillStyle = '#000000';
-      ctx.fillRect(150, 35, 740, 150);
+      drawParallelogram(150, 35, 740, 150, 28);
+      ctx.fill();
 
       ctx.fillStyle = '#ffffff';
       drawParallelogram(32, 35, 160, 150, 28);
