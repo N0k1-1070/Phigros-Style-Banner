@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>楽曲バナー画像ジェネレーター</title>
 
+  <!-- Google Fonts（シンプルにこれだけ） -->
   <link rel="preconnect" href="https://googleapis.com">
   <link rel="preconnect" href="https://gstatic.com" crossorigin>
   <link href="https://googleapis.com/css2?family=Noto+Sans+JP:wght@500;700&family=Saira:wght@500;700&display=swap" rel="stylesheet">
 
   <style>
-    body, input, select, button {
+    * {
+      box-sizing: border-box;
       font-family: 'Saira', 'Noto Sans JP', sans-serif;
     }
     body {
@@ -21,16 +23,22 @@
     }
     .controls {
       display: grid;
-      grid-template-columns: 120px 200px;
+      grid-template-columns: 110px 1fr;
+      max-width: 400px;
       gap: 10px;
       margin-bottom: 20px;
       align-items: center;
     }
     input, select, button {
-      padding: 8px;
+      padding: 8px 10px;
       font-size: 16px;
       border-radius: 4px;
       border: none;
+    }
+    input[type="color"] {
+      padding: 2px;
+      height: 38px;
+      width: 60px;
     }
     button {
       background-color: #007bff;
@@ -38,9 +46,8 @@
       font-weight: 700;
       cursor: pointer;
       grid-column: span 2;
-      margin-top: 10px;
+      margin-top: 8px;
     }
-    button:hover { background-color: #0056b3; }
     canvas {
       border: 1px dashed #666;
       max-width: 100%;
@@ -59,26 +66,26 @@
 
   <div class="controls">
     <label>難易度</label>
-    <select id="difficulty" onchange="onDifficultyChange()">
+    <select id="difficulty">
       <option value="IN" data-color="#e60012">IN (赤)</option>
       <option value="HD" data-color="#00a0e9">HD (青)</option>
       <option value="EZ" data-color="#32b16c">EZ (緑)</option>
-      <option value="AT" data-color="#484b4e">AT (グレー/黒)</option>
+      <option value="AT" data-color="#484b4e">AT (黒/グレー)</option>
     </select>
 
     <label>背景色</label>
-    <input type="color" id="bgColor" value="#e60012" oninput="draw()">
+    <input type="color" id="bgColor" value="#e60012">
 
     <label>レベル数値</label>
-    <input type="text" id="level" value="15" oninput="draw()">
+    <input type="text" id="level" value="15">
 
     <label>曲名</label>
-    <input type="text" id="title" value="曲名" oninput="draw()">
+    <input type="text" id="title" value="曲名">
 
     <label>作曲者</label>
-    <input type="text" id="composer" value="作曲者" oninput="draw()">
+    <input type="text" id="composer" value="作曲者">
 
-    <button onclick="downloadImage()">画像を保存 (PNG)</button>
+    <button id="downloadBtn">画像を保存 (PNG)</button>
   </div>
 
   <canvas id="canvas" width="900" height="220"></canvas>
@@ -87,112 +94,83 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
-    function onDifficultyChange() {
-      const select = document.getElementById('difficulty');
-      const color = select.options[select.selectedIndex].getAttribute('data-color');
-      document.getElementById('bgColor').value = color;
-      draw();
+    const elDiff = document.getElementById('difficulty');
+    const elColor = document.getElementById('bgColor');
+    const elLevel = document.getElementById('level');
+    const elTitle = document.getElementById('title');
+    const elComposer = document.getElementById('composer');
+
+    // 平行四辺形を描く共通関数（コードの重複をなくす）
+    function drawParallelogram(topX, topY, width, height, skew) {
+      ctx.beginPath();
+      ctx.moveTo(topX, topY);
+      ctx.lineTo(topX + width, topY);
+      ctx.lineTo(topX + width - skew, topY + height);
+      ctx.lineTo(topX - skew, topY + height);
+      ctx.closePath();
     }
 
+    // メインの描画処理
     function draw() {
-      const diff = document.getElementById('difficulty').value;
-      const bgColor = document.getElementById('bgColor').value;
-      const level = document.getElementById('level').value;
-      const title = document.getElementById('title').value;
-      const composer = document.getElementById('composer').value;
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 1. 右側の黒い帯を描画
+      // 1. 黒帯
       ctx.fillStyle = '#000000';
       ctx.fillRect(150, 35, 740, 150);
 
-      // 2. 後ろの白い平行四辺形（黒帯と同じ高さ Y=35〜185、左右に少し広め）
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(32, 35);   // 左上
-      ctx.lineTo(192, 35);  // 右上
-      ctx.lineTo(164, 185); // 右下
-      ctx.lineTo(4, 185);   // 左下
-      ctx.closePath();
+      // 2. 後ろの白帯（黒帯と同じ高さ Y=35, H=150）
       ctx.fillStyle = '#ffffff';
+      drawParallelogram(32, 35, 160, 150, 28);
       ctx.fill();
-      ctx.restore();
 
-      // 3. 手前の色つき平行四辺形（白より上下に縦長 Y=18〜202 ＋ ドロップシャドウ）
+      // 3. 手前の色つき枠（白より上下に縦長 Y=18, H=184 ＋ ドロップシャドウ）
       ctx.save();
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
       ctx.shadowBlur = 12;
-      ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 4;
-
-      ctx.beginPath();
-      ctx.moveTo(52, 18);   // 左上（白より上に出す）
-      ctx.lineTo(178, 18);  // 右上
-      ctx.lineTo(144, 202); // 右下（白より下に出す）
-      ctx.lineTo(18, 202);  // 左下
-      ctx.closePath();
-
-      ctx.fillStyle = bgColor;
+      ctx.fillStyle = elColor.value;
+      drawParallelogram(52, 18, 126, 184, 34);
       ctx.fill();
       ctx.restore();
 
-      // 4. 数値と難易度のテキスト（Saira・真っ直ぐ垂直）
-      ctx.save();
+      // 4. 数値・難易度（Saira）
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
+      ctx.font = '700 72px Saira, sans-serif';
+      ctx.fillText(elLevel.value, 98, 118);
 
-      // レベル数値
-      ctx.font = '700 72px "Saira", sans-serif';
-      ctx.fillText(level, 98, 118);
+      ctx.font = '700 30px Saira, sans-serif';
+      ctx.fillText(elDiff.value, 98, 168);
 
-      // 難易度表記
-      ctx.font = '700 30px "Saira", sans-serif';
-      ctx.fillText(diff, 98, 168);
-      ctx.restore();
-
-      // 5. 曲名と作曲者のテキスト
-      ctx.fillStyle = '#ffffff';
+      // 5. 曲名・作曲者（Saira + Noto Sans JP）
       ctx.textAlign = 'left';
+      ctx.font = '700 48px Saira, "Noto Sans JP", sans-serif';
+      ctx.fillText(elTitle.value, 215, 110, 640);
 
-      ctx.font = '700 48px "Saira", "Noto Sans JP", sans-serif';
-      ctx.fillText(title, 215, 110, 640);
-
-      ctx.font = '500 28px "Saira", "Noto Sans JP", sans-serif';
       ctx.fillStyle = '#dddddd';
-      ctx.fillText(composer, 218, 160, 640);
+      ctx.font = '500 28px Saira, "Noto Sans JP", sans-serif';
+      ctx.fillText(elComposer.value, 218, 160, 640);
     }
 
-    // FontFace APIでSairaを確実にロードしてから描画
-    async function initFonts() {
-      try {
-        const sairaBold = new FontFace(
-          'Saira',
-          'url(https://gstatic.com/s/saira/v20/memWYa2wxmKQyPMrZX79wwYZQMhsyuShhKMjjbU9uXuA74kdCJ4.woff2)',
-          { weight: '700' }
-        );
-        const sairaMedium = new FontFace(
-          'Saira',
-          'url(https://gstatic.com/s/saira/v20/memWYa2wxmKQyPMrZX79wwYZQMhsyuShhKMjjbU9uXuA72ldCJ4.woff2)',
-          { weight: '500' }
-        );
-        const loadedFonts = await Promise.all([sairaBold.load(), sairaMedium.load()]);
-        loadedFonts.forEach(font => document.fonts.add(font));
-      } catch (e) {
-        console.log('Font load fallback:', e);
-      }
+    // イベント登録
+    elDiff.addEventListener('change', () => {
+      elColor.value = elDiff.options[elDiff.selectedIndex].dataset.color;
       draw();
-    }
+    });
+    [elColor, elLevel, elTitle, elComposer].forEach(el => {
+      el.addEventListener('input', draw);
+    });
 
-    draw();
-    initFonts();
-
-    function downloadImage() {
+    document.getElementById('downloadBtn').addEventListener('click', () => {
       const link = document.createElement('a');
       link.download = 'banner.png';
       link.href = canvas.toDataURL('image/png');
       link.click();
-    }
+    });
+
+    // フォントロード完了を待って描画
+    document.fonts.load('700 72px Saira').then(draw);
+    draw();
   </script>
 </body>
 </html>
