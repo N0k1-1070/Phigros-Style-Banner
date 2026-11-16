@@ -5,14 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>楽曲バナー画像ジェネレーター</title>
 
-  <link rel="preconnect" href="https://googleapis.com">
-  <link rel="preconnect" href="https://gstatic.com" crossorigin>
-  <link href="https://googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Saira:wght@400;600&display=swap" rel="stylesheet">
-
   <style>
+    /* GitHubに置いたSaira.otfを直接読み込み */
+    @font-face {
+      font-family: 'MySaira';
+      src: url('./Saira-Regular.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
     * {
       box-sizing: border-box;
-      font-family: 'Saira', 'Noto Sans JP', sans-serif;
+      font-family: 'MySaira', sans-serif;
     }
     body {
       background-color: #222;
@@ -42,7 +46,6 @@
     button {
       background-color: #007bff;
       color: white;
-      font-weight: 600;
       cursor: pointer;
       grid-column: span 2;
       margin-top: 8px;
@@ -130,22 +133,22 @@
       ctx.fill();
       ctx.restore();
 
-      // 4. 数値・難易度（Saira Regular〜SemiBoldの角ばった字体）
+      // 4. 数値・難易度（MySaira）
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
-      ctx.font = '600 72px Saira, sans-serif';
+      ctx.font = '72px "MySaira", sans-serif';
       ctx.fillText(elLevel.value, 98, 118);
 
-      ctx.font = '600 30px Saira, sans-serif';
+      ctx.font = '30px "MySaira", sans-serif';
       ctx.fillText(elDiff.value, 98, 168);
 
       // 5. 曲名・作曲者
       ctx.textAlign = 'left';
-      ctx.font = '600 48px Saira, "Noto Sans JP", sans-serif';
+      ctx.font = '48px "MySaira", sans-serif';
       ctx.fillText(elTitle.value, 215, 110, 640);
 
       ctx.fillStyle = '#dddddd';
-      ctx.font = '400 28px Saira, "Noto Sans JP", sans-serif';
+      ctx.font = '28px "MySaira", sans-serif';
       ctx.fillText(elComposer.value, 218, 160, 640);
     }
 
@@ -164,10 +167,8 @@
       link.click();
     });
 
-    // ページ全体の全リソース（CSS・フォント）読み込み完了時に描画
-    window.onload = () => {
-      document.fonts.ready.then(draw);
-    };
+    // Saira.otfの読み込み完了を待ってから確実に描画
+    document.fonts.load('72px "MySaira"').then(draw);
     draw();
   </script>
 </body>
