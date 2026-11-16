@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>楽曲バナー画像ジェネレーター</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #222;
+      color: #fff;
+      padding: 20px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 120px 250px;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+    input, select, button {
+      padding: 8px;
+      font-size: 16px;
+      border-radius: 4px;
+      border: none;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      grid-column: span 2;
+      margin-top: 10px;
+    }
+    button:hover { background-color: #0056b3; }
+    canvas {
+      border: 1px dashed #666;
+      max-width: 100%;
+      background-image: linear-gradient(45deg, #444 25%, transparent 25%),
+                        linear-gradient(-45deg, #444 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #444 75%),
+                        linear-gradient(-45deg, transparent 75%, #444 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>楽曲バナー画像ジェネレーター</h2>
+
+  <div class="controls">
+    <label>難易度</label>
+    <select id="difficulty" onchange="onDifficultyChange()">
+      <option value="IN" data-color="#e60012">IN (赤)</option>
+      <option value="HD" data-color="#00a0e9">HD (青)</option>
+      <option value="EZ" data-color="#32b16c">EZ (緑)</option>
+      <option value="AT" data-color="#333333">AT (黒/白)</option>
+    </select>
+
+    <label>背景色</label>
+    <input type="color" id="bgColor" value="#e60012" oninput="draw()">
+
+    <label>レベル数値</label>
+    <input type="text" id="level" value="15" oninput="draw()">
+
+    <label>曲名</label>
+    <input type="text" id="title" value="曲名" oninput="draw()">
+
+    <label>作曲者</label>
+    <input type="text" id="composer" value="作曲者" oninput="draw()">
+
+    <button onclick="downloadImage()">画像を保存 (PNG)</button>
+  </div>
+
+  <!-- 画像を描画するキャンバス -->
+  <canvas id="canvas" width="900" height="220"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 難易度変更時に自動で色も切り替える
+    function onDifficultyChange() {
+      const select = document.getElementById('difficulty');
+      const color = select.options[select.selectedIndex].getAttribute('data-color');
+      document.getElementById('bgColor').value = color;
+      draw();
+    }
+
+    // キャンバスへの描画処理
+    function draw() {
+      const diff = document.getElementById('difficulty').value;
+      const bgColor = document.getElementById('bgColor').value;
+      const level = document.getElementById('level').value;
+      const title = document.getElementById('title').value;
+      const composer = document.getElementById('composer').value;
+
+      // キャンバスをクリア（背景透過）
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 1. 右側の黒い帯を描画
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(140, 35, 750, 150);
+
+      // 2. 左側の斜め四角形（白フチ＋指定色）を描画
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(45, 25);   // 左上
+      ctx.lineTo(175, 25);  // 右上
+      ctx.lineTo(145, 195); // 右下
+      ctx.lineTo(15, 195);  // 左下
+      ctx.closePath();
+
+      ctx.fillStyle = bgColor;
+      ctx.fill();
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+      ctx.restore();
+
+      // 3. 数値と難易度のテキスト（斜体風）
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      // 少し傾ける
+      ctx.transform(1, 0, -0.17, 1, 0, 0);
+
+      // レベル数値
+      ctx.font = 'italic bold 64px sans-serif';
+      ctx.fillText(level, 118, 115);
+
+      // 難易度表記
+      ctx.font = 'italic bold 28px sans-serif';
+      ctx.fillText(diff, 115, 165);
+      ctx.restore();
+
+      // 4. 曲名と作曲者のテキスト
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'left';
+
+      // 曲名（長い場合は自動で幅を縮小）
+      ctx.font = 'bold 48px sans-serif';
+      ctx.fillText(title, 195, 110, 660);
+
+      // 作曲者
+      ctx.font = '28px sans-serif';
+      ctx.fillStyle = '#dddddd';
+      ctx.fillText(composer, 198, 160, 660);
+    }
+
+    // PNGとしてダウンロード
+    function downloadImage() {
+      const link = document.createElement('a');
+      link.download = 'banner.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // 初回描画
+    draw();
+  </script>
+</body>
+</html>
